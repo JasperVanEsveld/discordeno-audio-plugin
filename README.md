@@ -46,7 +46,7 @@ player.pushQuery("Obi-Wan - Hello there.");
 // 2 channel, 16bit Little Endian @48kHz
 player.pushQuery("./hello/world.pcm"); 
 
-// Iterrupts the current sound, resumes when done
+// Interrupts the current sound, resumes when done
 player.interruptQuery("rEq1Z0bjdwc"); 
 ```
 
@@ -64,7 +64,9 @@ player.push(source);
 ```
 Or pass in your own `loadSource` function when enabling the plugin:
 ```js
-const loadSource = (query: string) => createAudioSource("Title", () => AsyncIterableIterator<Uint8Array>);
+const loadSource = (query: string) => {
+  return createAudioSource("Title", () => AsyncIterableIterator<Uint8Array>);
+}
 const bot = enableAudioPlugin(baseBot, loadSource);
 player.pushQuery("Query to pass to loadSource");
 ```
