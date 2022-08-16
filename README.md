@@ -59,7 +59,7 @@ player.interruptQuery("rEq1Z0bjdwc");
 Given that you have an audio source in the correct format you can play from any source that you want.
 
 IMPORTANT:
-The data needs to be PCM 2 channel 16bit Little Endian @48kHz.
+The data needs to be OPUS encoded 2 channel 16bit Little Endian @48kHz.
 ```js
 // Create and play your own source!
 const source = createAudioSource("Title", () => AsyncIterableIterator<Uint8Array>)
