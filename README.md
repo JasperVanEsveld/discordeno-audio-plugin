@@ -6,11 +6,14 @@ Or create your own audio sources!
 
 No external plugins like FFMPEG required!
 
+IMPORTANT: The `--unstable` flag is required as the unstable [datagram](https://doc.deno.land/deno/unstable/~/Deno.listenDatagram) implementation is used.
+
 ## Enable Audio usage
 
 Enabling the plugin is similar to the cache plugin.
 
 After that just connect to a channel and play your songs!
+
 
 ```js
 import { enableAudioPlugin } from "https://deno.land/x/discordeno_audio_plugin/mod.ts";
