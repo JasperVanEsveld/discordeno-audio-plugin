@@ -4,6 +4,7 @@ import { QueuePlayer } from "./player/mod.ts";
 import { connectWebSocket } from "./websocket/mod.ts";
 import { Bot } from "../deps.ts";
 import { createOnAudio } from "./listen.ts";
+import { loadLocalOrYoutube, LoadSource } from "./audio-source/universal.ts";
 
 export * from "./connection-data.ts";
 export * from "./websocket/mod.ts";
@@ -23,20 +24,23 @@ export type AudioBot<T extends Bot> = T & {
   helpers: ReturnType<typeof createAudioHelpers>;
 };
 
-export function enableAudioPlugin<T extends Bot>(bot: T): AudioBot<T> {
-  Object.assign(bot.helpers, createAudioHelpers(bot));
+export function enableAudioPlugin<T extends Bot>(
+  bot: T,
+  loadSource = loadLocalOrYoutube
+): AudioBot<T> {
+  Object.assign(bot.helpers, createAudioHelpers(bot, loadSource));
   return bot as AudioBot<T>;
 }
 
-function createAudioHelpers(bot: Bot) {
+function createAudioHelpers(bot: Bot, loadSource: LoadSource) {
   const udpSource = new EventSource<[UdpArgs]>();
-  createBotData(bot, udpSource);
+  createBotData(bot, udpSource, loadSource);
   const resetPlayer = (guildId: bigint) => {
     const conn = getConnectionData(bot.id, guildId);
     const oldPlayer = conn.player;
     const oldQueue = asArray(oldPlayer.current());
     oldQueue.push(...oldPlayer.upcoming());
-    conn.player = new QueuePlayer(conn);
+    conn.player = new QueuePlayer(conn, loadSource);
     conn.player.push(...oldQueue);
     oldPlayer.stopInterrupt();
     oldPlayer.stop();

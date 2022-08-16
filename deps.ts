@@ -6,6 +6,6 @@ export {
   default as ytdl,
   getInfo,
   downloadFromInfo,
-} from "https://deno.land/x/ytdl_core@v0.1.0/mod.ts";
+} from "https://deno.land/x/ytdl_core@v0.1.1/mod.ts";
 export type { VideoFormat } from "https://deno.land/x/ytdl_core@v0.1.0/src/types.ts";
 export { default as YouTube } from "https://deno.land/x/youtube_sr@v4.1.17/mod.ts";

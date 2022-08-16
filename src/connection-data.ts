@@ -1,6 +1,6 @@
 import { Bot } from "../deps.ts";
 import { EventSource } from "../utils/mod.ts";
-import { UdpArgs } from "./mod.ts";
+import { AudioSource, LoadSource, UdpArgs } from "./mod.ts";
 import { QueuePlayer } from "./player/mod.ts";
 import { sendAudioPacket } from "./udp/packet.ts";
 
@@ -9,6 +9,7 @@ export type BotData = {
   guildData: Map<bigint, ConnectionData>;
   udpSource: EventSource<[UdpArgs]>;
   bufferSize: number;
+  loadSource: (query: string) => AudioSource[] | Promise<AudioSource[]>;
 };
 
 export type ConnectionData = {
@@ -53,6 +54,7 @@ function randomNBit(n: number) {
 export function createBotData(
   bot: Bot,
   udpSource: EventSource<[UdpArgs]>,
+  loadSource: LoadSource,
   bufferSize = 10
 ) {
   const botData: BotData = {
@@ -60,6 +62,7 @@ export function createBotData(
     guildData: new Map(),
     udpSource,
     bufferSize,
+    loadSource,
   };
   connectionData.set(bot.id, botData);
   return botData;
@@ -107,7 +110,7 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
       usersToSsrc: new Map<bigint, number>(),
       stopHeart: () => {},
     };
-    data.player = new QueuePlayer(data);
+    data.player = new QueuePlayer(data, botData.loadSource);
     botData.guildData.set(guildId, data);
     connectSocketToSource(
       botData.bot,

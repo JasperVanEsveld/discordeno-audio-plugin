@@ -1,5 +1,5 @@
 import { Queue } from "../../utils/mod.ts";
-import { AudioSource, loadSource } from "../audio-source/mod.ts";
+import { AudioSource, LoadSource } from "../audio-source/mod.ts";
 import { ConnectionData } from "../connection-data.ts";
 import { RawPlayer } from "./raw-player.ts";
 import { Player } from "./types.ts";
@@ -9,9 +9,11 @@ export class QueuePlayer extends Queue<AudioSource> implements Player {
   looping = false;
   playingSince?: number;
   #rawPlayer: RawPlayer;
+  #loadSource: LoadSource;
 
-  constructor(conn: ConnectionData) {
+  constructor(conn: ConnectionData, loadSource: LoadSource) {
     super();
+    this.#loadSource = loadSource;
     this.#rawPlayer = new RawPlayer(conn);
     this.#startQueue();
     this.playing = true;
@@ -73,14 +75,14 @@ export class QueuePlayer extends Queue<AudioSource> implements Player {
    * @param query Loads a universal song (local file or youtube search)
    */
   async interruptQuery(query: string) {
-    const sources = await loadSource(query as string);
+    const sources = await this.#loadSource(query as string);
     this.#rawPlayer.interrupt(await sources[0].data());
   }
 
   async pushQuery(...queries: string[]) {
     const sources = [];
     for (const query of queries) {
-      sources.push(...(await loadSource(query as string)));
+      sources.push(...(await this.#loadSource(query as string)));
       this.push(...sources);
     }
     return sources;
@@ -89,7 +91,7 @@ export class QueuePlayer extends Queue<AudioSource> implements Player {
   async unshiftQuery(...queries: string[]) {
     const sources = [];
     for (const query of queries) {
-      sources.push(...(await loadSource(query as string)));
+      sources.push(...(await this.#loadSource(query as string)));
       this.unshift(...sources);
     }
     return sources;
