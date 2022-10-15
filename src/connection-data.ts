@@ -87,6 +87,9 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
         });
         listening = true;
       } catch (_err) {
+        if(_err instanceof TypeError) {
+          throw new Error("Please enable unstable by adding --unstable.");
+        }
         currentPort++;
       }
     }
