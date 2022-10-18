@@ -1,5 +1,5 @@
-export * from "https://deno.land/x/discordeno@15.0.1/mod.ts";
-export * from "https://deno.land/x/discordeno@15.0.1/plugins/cache/mod.ts";
+export * from "https://deno.land/x/discordeno@17.0.0/mod.ts";
+export * from "https://deno.land/x/discordeno@17.0.0/plugins/cache/mod.ts";
 export * as opus from "https://unpkg.com/@evan/wasm@0.0.95/target/opus/deno.js";
 export * from "https://unpkg.com/@evan/wasm@0.0.95/target/nacl/deno.js";
 export {
