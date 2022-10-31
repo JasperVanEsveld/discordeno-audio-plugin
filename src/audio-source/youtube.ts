@@ -1,13 +1,9 @@
-import { YouTube, ytdl } from "../../deps.ts";
+import { YouTube, getInfo, downloadFromInfo, VideoFormat } from "../../deps.ts";
 import { bufferIter } from "../../utils/mod.ts";
 import { demux } from "../demux/mod.ts";
 import { createAudioSource } from "./audio-source.ts";
 
-function supportedFormatFilter(format: {
-  codecs: string;
-  container: string;
-  audioSampleRate?: string;
-}) {
+function supportedFormatFilter(format: VideoFormat) {
   return (
     format.codecs === "opus" &&
     format.container === "webm" &&
@@ -28,8 +24,8 @@ export async function getYoutubeSource(query: string) {
   if (results.length > 0) {
     const { id, title } = results[0];
     return createAudioSource(title!, async () => {
-      const info = await ytdl.getInfo(id!);
-      const audio = await ytdl.downloadFromInfo(info, {
+      const info = await getInfo(id!);
+      const audio = await downloadFromInfo(info, {
         filter: supportedFormatFilter,
       });
       return bufferIter(demux(audio));
