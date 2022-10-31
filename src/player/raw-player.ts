@@ -2,6 +2,7 @@ import { EventSource, wait } from "../../utils/mod.ts";
 import { ConnectionData } from "../connection-data.ts";
 import { FRAME_DURATION } from "../sample-consts.ts";
 import { Player } from "./types.ts";
+import { setDriftlessInterval, clearDriftless } from "npm:driftless";
 
 export class RawPlayer implements Player {
   #audio?: AsyncIterableIterator<Uint8Array>;
@@ -29,29 +30,23 @@ export class RawPlayer implements Player {
     }
   }
 
-  async play() {
+  play() {
     if (this.playing) {
       return;
     }
     this.playing = true;
 
-    let start = Date.now();
-    let packets = 0;
-    while (this.playing) {
-      const waitTime = packets * FRAME_DURATION - (Date.now() - start);
-      if (waitTime < 0 || waitTime > 2 * FRAME_DURATION) {
-        start = Date.now();
-        packets = 0;
+    const inter = setDriftlessInterval(async () => {
+      if (this.playing === false) {
+        clearDriftless(inter);
       }
       if (this.#interrupt) {
         const { done, value } = await this.#interrupt.next();
         if (done) {
           this.#interrupt = undefined;
         } else {
-          await wait(packets * FRAME_DURATION - (Date.now() - start));
-          packets++;
           this.#conn.audio.trigger(value);
-          continue;
+          return;
         }
       }
       const nextAudioIter = await this.#audio?.next();
@@ -59,12 +54,10 @@ export class RawPlayer implements Player {
         this.#audio = undefined;
         this.#doneSource.trigger();
         await this.#onNext();
-        continue;
+        return;
       }
-      await wait(packets * FRAME_DURATION - (Date.now() - start));
-      packets++;
       this.#conn.audio.trigger(nextAudioIter.value);
-    }
+    }, FRAME_DURATION);
   }
 
   pause() {

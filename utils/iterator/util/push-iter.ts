@@ -2,23 +2,23 @@ export type GetNext<T> = () => Promise<IteratorResult<Awaited<T>, void>>;
 
 export function pushIter<T>() {
   type Value = IteratorResult<T, undefined>;
-  const values:Value[] = [];
+  const values: Value[] = [];
   let resolvers: ((value: Value) => void)[] = [];
   const pushValue = (value: T) => {
     if (resolvers.length <= 0) {
-      values.push({done: false, value});
+      values.push({ done: false, value });
     }
     for (const resolve of resolvers) {
-      resolve({done: false, value});
+      resolve({ done: false, value });
     }
     resolvers = [];
   };
   const pushDone = () => {
     if (resolvers.length <= 0) {
-      values.push({done: true, value: undefined });
+      values.push({ done: true, value: undefined });
     }
     for (const resolve of resolvers) {
-      resolve({done: true, value: undefined });
+      resolve({ done: true, value: undefined });
     }
     resolvers = [];
   };
@@ -45,10 +45,12 @@ export function pushIter<T>() {
   };
 }
 
-async function* iterFromPull<T>(pullValue: () => Promise<IteratorResult<T, undefined>>) {
+async function* iterFromPull<T>(
+  pullValue: () => Promise<IteratorResult<T, undefined>>
+) {
   let done;
-  while(!done) {
-    const result =  await pullValue();
+  while (!done) {
+    const result = await pullValue();
     done = result.done;
     if (!result.done) {
       yield result.value;

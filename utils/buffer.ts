@@ -1,6 +1,6 @@
 export async function* bufferIter<T>(
   iterator: AsyncIterableIterator<T>,
-  size = 10
+  size = 60
 ) {
   const buffer: T[] = [];
   for (let i = 0; i < size; i++) {
