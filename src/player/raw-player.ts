@@ -1,4 +1,4 @@
-import { EventSource, wait } from "../../utils/mod.ts";
+import { EventSource } from "../../utils/mod.ts";
 import { ConnectionData } from "../connection-data.ts";
 import { FRAME_DURATION } from "../sample-consts.ts";
 import { Player } from "./types.ts";
