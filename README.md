@@ -16,20 +16,30 @@ After that just connect to a channel and play your songs!
 
 
 ```js
+import { createBot, startBot, Intents } from "https://deno.land/x/discordeno/mod.ts";
 import { enableAudioPlugin } from "https://deno.land/x/discordeno_audio_plugin/mod.ts";
+ 
+ // Create your bot
+const baseBot = createBot({
+    token: your-token,
+    botId: your-botid,
+    intents: Intents.GuildVoiceStates, // Required to connect!
+  });
+  
+// Enable the plugin
+const bot = enableAudioPlugin(baseBot); 
 
-const baseBot = createBot({}); // Create your bot
-const bot = enableAudioPlugin(baseBot); // Enable the plugin
+// Start your bot
 await startBot(bot);
 
-// Connect to a channel like normal
+// Connect to a channel
 bot.helpers.connectToVoiceChannel(
-  "your-guildid",
-  "channel-id"
+  your-guildid,
+  your-channelid
 );
 
 // Play music :)
-const player = bot.helpers.getPlayer("your-guildid");
+const player = bot.helpers.getPlayer(your-guildid);
 player.pushQuery("Obi-Wan - Hello there.");
 ```
 
