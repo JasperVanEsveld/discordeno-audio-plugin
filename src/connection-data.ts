@@ -7,17 +7,17 @@ import { sendAudioPacket } from "./udp/packet.ts";
 export type BotData = {
   bot: Bot;
   guildData: Map<bigint, ConnectionData>;
-  udpSource: EventSource<[UdpArgs]>;
+  udpSource: EventSource<UdpArgs>;
   bufferSize: number;
   loadSource: (query: string) => AudioSource[] | Promise<AudioSource[]>;
 };
 
 export type ConnectionData = {
   player: QueuePlayer;
-  audio: EventSource<[Uint8Array]>;
+  audio: EventSource<Uint8Array>;
   guildId: bigint;
   udpSocket: Deno.DatagramConn;
-  udpStream: () => AsyncIterableIterator<Uint8Array>;
+  onUDP: (listener: (arg: Uint8Array) => void) => void;
   ssrcToUser: Map<number, bigint>;
   usersToSsrc: Map<bigint, number>;
   context: {
@@ -53,7 +53,7 @@ function randomNBit(n: number) {
 
 export function createBotData(
   bot: Bot,
-  udpSource: EventSource<[UdpArgs]>,
+  udpSource: EventSource<UdpArgs>,
   loadSource: LoadSource,
   bufferSize = 10
 ) {
@@ -94,12 +94,13 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
       }
     }
     udpSocket = udpSocket as Deno.DatagramConn;
-    const udpReceive = new EventSource<[Uint8Array]>();
+    const udpReceive = new EventSource<Uint8Array>();
     data = {
       player: undefined as unknown as QueuePlayer,
       guildId,
       udpSocket,
-      udpStream: () => udpReceive.iter().map(([packet]) => packet),
+      onUDP: (listener: (arg: Uint8Array) => void) =>
+        udpReceive.addListener(listener),
       context: {
         ssrc: 1,
         ready: false,
@@ -108,7 +109,7 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
         timestamp: randomNBit(32),
       },
       connectInfo: {},
-      audio: new EventSource<[Uint8Array]>(),
+      audio: new EventSource<Uint8Array>(),
       ssrcToUser: new Map<number, bigint>(),
       usersToSsrc: new Map<bigint, number>(),
       stopHeart: () => {},
@@ -119,7 +120,7 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
       botData.bot,
       guildId,
       udpSocket,
-      botData.udpSource,
+      // botData.udpSource,
       udpReceive
     );
     connectAudioIterable(data);
@@ -127,10 +128,10 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
   return data;
 }
 
-async function connectAudioIterable(conn: ConnectionData) {
-  for await (const [chunk] of conn.audio.iter()) {
+function connectAudioIterable(conn: ConnectionData) {
+  conn.audio.addListener((chunk) => {
     sendAudioPacket(conn, chunk);
-  }
+  });
 }
 
 export function getUserSSRC(conn: ConnectionData, user: bigint) {
@@ -150,11 +151,11 @@ async function connectSocketToSource(
   bot: Bot,
   guildId: bigint,
   socket: Deno.DatagramConn,
-  source: EventSource<[UdpArgs]>,
-  localSource: EventSource<[Uint8Array]>
+  // source: EventSource<UdpArgs>,
+  localSource: EventSource<Uint8Array>
 ) {
   for await (const [data, _address] of socket) {
-    source.trigger({ bot, guildId, data });
+    // source.trigger({ bot, guildId, data });
     localSource.trigger(data);
   }
 }

@@ -1,24 +1,11 @@
-import { IterSource, fromCallback } from "./iterator/mod.ts";
-import { Arr } from "./types.ts";
+type Listener<T> = (arg: T) => void;
 
-type Listener<T extends Arr> = (...arg: T) => void;
-
-export class EventSource<T extends Arr> {
+export class EventSource<T> {
   listeners: Listener<T>[] = [];
-  iter: IterSource<T>["iterator"];
-  disconnect: IterSource<T>["disconnect"];
 
-  constructor() {
-    const { iterator, disconnect } = fromCallback<T>((listener) =>
-      this.addListener(listener)
-    );
-    this.iter = iterator;
-    this.disconnect = disconnect;
-  }
-
-  trigger(...arg: T) {
+  trigger(arg: T) {
     for (const listener of this.listeners) {
-      listener(...arg);
+      listener(arg);
     }
   }
 

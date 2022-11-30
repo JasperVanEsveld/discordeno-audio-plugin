@@ -31,10 +31,10 @@ export class QueuePlayer extends Queue<AudioSource> implements Player {
     }
   }
 
-  async #startQueue() {
-    for await (const [song] of this.stream()) {
+  #startQueue() {
+    this.listen(async (song) => {
       await this.#setSong(song);
-    }
+    });
   }
 
   play() {

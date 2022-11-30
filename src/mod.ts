@@ -3,8 +3,9 @@ import { createBotData, getConnectionData } from "./connection-data.ts";
 import { QueuePlayer } from "./player/mod.ts";
 import { connectWebSocket } from "./websocket/mod.ts";
 import { Bot } from "../deps.ts";
-import { createOnAudio } from "./listen.ts";
 import { loadLocalOrYoutube, LoadSource } from "./audio-source/universal.ts";
+import { ReceivedAudio } from "./listen.ts";
+import { mapToAudio } from "./listen.ts";
 
 export * from "./connection-data.ts";
 export * from "./websocket/mod.ts";
@@ -33,7 +34,7 @@ export function enableAudioPlugin<T extends Bot>(
 }
 
 function createAudioHelpers(bot: Bot, loadSource: LoadSource) {
-  const udpSource = new EventSource<[UdpArgs]>();
+  const udpSource = new EventSource<UdpArgs>();
   createBotData(bot, udpSource, loadSource);
   const resetPlayer = (guildId: bigint) => {
     const conn = getConnectionData(bot.id, guildId);
@@ -86,6 +87,11 @@ function createAudioHelpers(bot: Bot, loadSource: LoadSource) {
     /**
      * Creates an async iterable with decoded audio packets
      */
-    onAudio: createOnAudio(udpSource),
+    // onAudio: (
+    //   options: { guild: bigint | bigint[]; user?: bigint | bigint[] },
+    //   listener: (arg: ReceivedAudio) => void
+    // ) => {
+    //   udpSource.addListener((udp) => mapToAudio(options, listener, udp));
+    // },
   };
 }
