@@ -8,6 +8,8 @@ export type AudioSource = {
     | AsyncIterableIterator<Uint8Array>;
 };
 
+async function* empty() {}
+
 export function createAudioSource(
   title: string,
   data: () =>
@@ -18,6 +20,13 @@ export function createAudioSource(
   return {
     id: lastId,
     title,
-    data,
+    data: () => {
+      try {
+        return data();
+      } catch (error) {
+        console.error(error);
+        return empty();
+      }
+    },
   };
 }
