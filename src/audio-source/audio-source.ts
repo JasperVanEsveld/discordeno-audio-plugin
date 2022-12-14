@@ -25,6 +25,7 @@ export function createAudioSource(
         return data();
       } catch (error) {
         console.error(error);
+        console.log(`Failed to play ${title}\n Returning empty stream`);
         return empty();
       }
     },
