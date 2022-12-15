@@ -8,7 +8,7 @@ export type AudioSource = {
     | AsyncIterableIterator<Uint8Array>;
 };
 
-async function* empty() {}
+export async function* empty() {}
 
 export function createAudioSource(
   title: string,
