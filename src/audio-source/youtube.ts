@@ -3,18 +3,6 @@ import { bufferIter } from "../../utils/mod.ts";
 import { demux } from "../demux/mod.ts";
 import { createAudioSource, empty } from "./audio-source.ts";
 
-function supportedFormatFilter(format: {
-  codecs: string;
-  container: string;
-  audioSampleRate?: string;
-}) {
-  return (
-    format.codecs === "opus" &&
-    format.container === "webm" &&
-    format.audioSampleRate === "48000"
-  );
-}
-
 export async function getYoutubeSources(...queries: string[]) {
   const sources = queries.map((query) => getYoutubeSource(query));
   const awaitedSources = await Promise.all(sources);
