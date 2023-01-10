@@ -53,7 +53,9 @@ export class RawPlayer implements Player {
       if (nextAudioIter === undefined || nextAudioIter.done) {
         this.#audio = undefined;
         this.#doneSource.trigger();
+        this.playing = false;
         await this.#onNext();
+        this.play();
         return;
       }
       this.#conn.audio.trigger(nextAudioIter.value);
