@@ -1,4 +1,4 @@
-export async function* streamAsyncIterator<T>(stream: ReadableStream<T>) {
+export async function* streamAsyncIterator(stream: ReadableStream) {
   // Get a lock on the stream
   const reader = stream.getReader();
 
