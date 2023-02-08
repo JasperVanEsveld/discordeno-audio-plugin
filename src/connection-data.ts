@@ -26,6 +26,9 @@ export type ConnectionData = {
     speaking: boolean;
     sequence: number;
     timestamp: number;
+    missedHeart: number;
+    lastHeart?: number;
+    reconnect: number;
   };
   connectInfo: {
     endpoint?: string;
@@ -106,6 +109,8 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
         speaking: false,
         sequence: randomNBit(16),
         timestamp: randomNBit(32),
+        missedHeart: 0,
+        reconnect: 0,
       },
       connectInfo: {},
       audio: new EventSource<[Uint8Array]>(),

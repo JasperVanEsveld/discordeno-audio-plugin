@@ -76,16 +76,6 @@ export function createOnAudio(
         }
       })
       .filter((data) => data !== undefined)
-      .map((data) => data!)
-      .filter((data) => !silence(...data.decoded));
+      .map((data) => data!);
   };
-}
-
-function silence(...values: number[]) {
-  for (const value of values) {
-    if (value !== 0) {
-      return false;
-    }
-  }
-  return true;
 }
