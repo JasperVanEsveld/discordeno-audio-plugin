@@ -1,6 +1,7 @@
-import { VoiceOpcodes } from "../../deps.ts";
+import { VoiceCloseEventCodes } from "../../deps.ts";
 import { ConnectionData } from "../connection-data.ts";
-import { ServerVoiceOpcodes, socketHandlers } from "./handlers.ts";
+import { socketHandlers } from "./handlers.ts";
+import { SendVoiceOpcodes } from "./opcodes.ts";
 
 export function connectWebSocket(
   conn: ConnectionData,
@@ -19,7 +20,7 @@ export function connectWebSocket(
   const ws = new WebSocket(`wss://${endpoint}?v=4`);
   conn.ws = ws;
   const identifyRequest = JSON.stringify({
-    op: VoiceOpcodes.Identify,
+    op: SendVoiceOpcodes.Identify,
     d: {
       server_id: guildId.toString(),
       user_id: userId.toString(),
@@ -28,7 +29,7 @@ export function connectWebSocket(
     },
   });
   const resumeRequest = JSON.stringify({
-    op: VoiceOpcodes.Resume,
+    op: SendVoiceOpcodes.Resume,
     d: {
       server_id: guildId.toString(),
       session_id: sessionId,
@@ -69,7 +70,7 @@ function handleOpen(
 
 function handleMessage(conn: ConnectionData, ev: MessageEvent<any>) {
   const data = JSON.parse(ev.data);
-  socketHandlers[data.op as ServerVoiceOpcodes](conn, data.d);
+  socketHandlers[data.op]?.(conn, data.d);
 }
 
 function handleClose(
@@ -80,15 +81,19 @@ function handleClose(
 ) {
   conn.stopHeart();
   conn.context.ready = false;
-  if (event.code < 4000) {
-    console.log("Try resume...");
-    conn.resume = true;
-    connectWebSocket(conn, userId, guildId);
-  } else if (event.code === 4014) {
-    conn.context.speaking = false;
-  } else if (event.code === 4006) {
-    conn.context.speaking = false;
+  conn.context.speaking = false;
+  conn.context.lastHeart = undefined;
+  conn.context.missedHeart = 0;
+  if (VoiceCloseEventCodes.Disconnect === event.code) {
+    console.log("Couldn't reconnect :(");
+    return;
   }
+  if (conn.context.reconnect >= 3) {
+    return;
+  }
+  conn.context.reconnect++;
+  conn.resume = true;
+  connectWebSocket(conn, userId, guildId);
 }
 
 /**
