@@ -1,7 +1,7 @@
 # Discordeno Audio Plugin
 
 This plugin enables your bot to send and receive audio.
-Play either local files or stream straight from YouTube using [ytdl-core](https://github.com/DjDeveloperr/ytdl_core).
+Play either local files or stream straight from YouTube using [yt_download](https://github.com/JasperVanEsveld/yt_download).
 Or create your own audio sources!
 
 No external plugins like FFMPEG required!
