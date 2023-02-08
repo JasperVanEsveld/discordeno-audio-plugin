@@ -53,7 +53,6 @@ function createAudioHelpers(bot: Bot, loadSource: LoadSource) {
     if (bot.id === userId && guildId) {
       const conn = getConnectionData(bot.id, guildId);
       conn.connectInfo.sessionId = sessionId;
-      connectWebSocket(conn, bot.id, guildId);
     }
     oldStateListener(bot, event);
   };

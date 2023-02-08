@@ -85,7 +85,6 @@ function handleClose(
   conn.context.lastHeart = undefined;
   conn.context.missedHeart = 0;
   if (VoiceCloseEventCodes.Disconnect === event.code) {
-    console.log("Couldn't reconnect :(");
     return;
   }
   if (conn.context.reconnect >= 3) {

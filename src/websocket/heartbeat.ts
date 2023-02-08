@@ -16,19 +16,18 @@ function sendHeartBeat(conn: ConnectionData) {
 }
 
 export function sendHeart(conn: ConnectionData, interval: number) {
-  const ws = conn.ws!;
   let last = Date.now();
-  if (ws.readyState === WebSocket.OPEN) {
+  if (conn.ws?.readyState === WebSocket.OPEN) {
     sendHeartBeat(conn);
   }
   let done = false;
   const repeatBeat = () => {
-    if (done || ws.readyState !== WebSocket.OPEN) {
+    if (done || conn.ws?.readyState !== WebSocket.OPEN) {
       return;
     }
     if (conn.context.missedHeart >= 3) {
       console.log("Missed too many heartbeats, attempting reconnect");
-      ws.close();
+      conn.ws?.close();
       return;
     }
     last = Date.now();
