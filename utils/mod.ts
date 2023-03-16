@@ -6,4 +6,5 @@ export * from "./number.ts";
 export * from "./wait.ts";
 export * from "./file.ts";
 export * from "./buffer.ts";
+export * from "./retry.ts";
 // export * from "./buffered-iterator.ts";
