@@ -1,22 +1,21 @@
-import { Arr } from "../types.ts";
 import { pushIter, addIterUtils } from "./util/mod.ts";
 
 type Listener<T> = { push: (arg: T) => void; done: () => void };
-export type IterSource<T extends Arr> = ReturnType<typeof fromCallback<T>>;
+export type IterSource<T> = ReturnType<typeof fromCallback<T>>;
 
-export function fromCallback<T extends Arr>(
-  source: (listener: (...values: T) => void) => void,
+export function fromCallback<T>(
+  source: (listener: (value: T) => void) => void,
   disconnect?: () => void
 ) {
   let isDone = false;
   let listeners: Listener<T>[] = [];
 
-  function trigger(...values: T) {
+  function trigger(value: T) {
     if (isDone) {
       return;
     }
     for (const listener of listeners) {
-      listener.push(values);
+      listener.push(value);
     }
   }
   source(trigger);

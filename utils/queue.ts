@@ -1,15 +1,15 @@
 import { assertEquals } from "https://deno.land/std@0.104.0/testing/asserts.ts";
 import { arrayMove, arrayShuffle } from "./array.ts";
-import { EventSource } from "./event-source.ts";
 
 export class Queue<T> {
   #current: T | undefined;
   #queue: T[] = [];
-  #source = new EventSource<[T]>();
-  waiting = false;
+  #waiting: ((value: T) => void)[] = [];
 
   clear() {
+    const cleared = this.#queue;
     this.#queue = [];
+    return cleared;
   }
 
   current() {
@@ -22,10 +22,15 @@ export class Queue<T> {
 
   push(...values: T[]) {
     this.#queue.push(...values);
-    if (this.waiting) {
-      this.triggerNext();
-      this.waiting = false;
+    for (const waiting of this.#waiting) {
+      const value = this.#queue.shift();
+      this.#current = value;
+      if (value == undefined) {
+        break;
+      }
+      waiting(value);
     }
+    this.#waiting = [];
   }
 
   unshift(...values: T[]) {
@@ -52,18 +57,15 @@ export class Queue<T> {
     return false;
   }
 
-  triggerNext() {
-    const value = this.#queue.shift();
+  async next() {
+    let value = this.#queue.shift();
     this.#current = value;
     if (value === undefined) {
-      this.waiting = true;
-    } else {
-      this.#source.trigger(value);
+      value = await new Promise<T>((resolve) => {
+        this.#waiting.push(resolve);
+      });
     }
-  }
-
-  stream() {
-    return this.#source.iter();
+    return value;
   }
 }
 
@@ -71,18 +73,15 @@ Deno.test({
   name: "Test",
   fn: async () => {
     const queue = new Queue<string>();
+    const promise0 = queue.next();
     queue.push("Hello");
     queue.push("World!");
-    const messages = queue.stream();
-    queue.triggerNext();
-    queue.triggerNext();
-    queue.triggerNext();
-    queue.triggerNext();
-    queue.triggerNext();
-    assertEquals("Hello", await messages.nextValue());
-    assertEquals("World!", await messages.nextValue());
-    assertEquals(undefined, await messages.nextValue());
-    assertEquals(undefined, await messages.nextValue());
-    assertEquals(undefined, await messages.nextValue());
+    assertEquals("Hello", await promise0);
+    assertEquals("World!", await queue.next());
+    const promise1 = queue.next();
+    const promise2 = queue.next();
+    queue.push("Multiple", "Words!");
+    assertEquals("Multiple", await promise1);
+    assertEquals("Words!", await promise2);
   },
 });

@@ -7,17 +7,17 @@ import { sendAudioPacket } from "./udp/packet.ts";
 export type BotData = {
   bot: Bot;
   guildData: Map<bigint, ConnectionData>;
-  udpSource: EventSource<[UdpArgs]>;
+  udpSource: EventSource<UdpArgs>;
   bufferSize: number;
   loadSource: (query: string) => AudioSource[] | Promise<AudioSource[]>;
 };
 
 export type ConnectionData = {
   player: QueuePlayer;
-  audio: EventSource<[Uint8Array]>;
+  audio: EventSource<Uint8Array>;
   guildId: bigint;
   udpSocket: Deno.DatagramConn;
-  udpStream: () => AsyncIterableIterator<Uint8Array>;
+  udpRaw: EventSource<Uint8Array>;
   ssrcToUser: Map<number, bigint>;
   usersToSsrc: Map<bigint, number>;
   context: {
@@ -56,7 +56,7 @@ function randomNBit(n: number) {
 
 export function createBotData(
   bot: Bot,
-  udpSource: EventSource<[UdpArgs]>,
+  udpSource: EventSource<UdpArgs>,
   loadSource: LoadSource,
   bufferSize = 10
 ) {
@@ -97,12 +97,12 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
       }
     }
     udpSocket = udpSocket as Deno.DatagramConn;
-    const udpReceive = new EventSource<[Uint8Array]>();
+    const udpRaw = new EventSource<Uint8Array>();
     data = {
       player: undefined as unknown as QueuePlayer,
       guildId,
       udpSocket,
-      udpStream: () => udpReceive.iter().map(([packet]) => packet),
+      udpRaw,
       context: {
         ssrc: 1,
         ready: false,
@@ -113,7 +113,7 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
         reconnect: 0,
       },
       connectInfo: {},
-      audio: new EventSource<[Uint8Array]>(),
+      audio: new EventSource<Uint8Array>(),
       ssrcToUser: new Map<number, bigint>(),
       usersToSsrc: new Map<bigint, number>(),
       stopHeart: () => {},
@@ -125,7 +125,7 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
       guildId,
       udpSocket,
       botData.udpSource,
-      udpReceive
+      udpRaw
     );
     connectAudioIterable(data);
   }
@@ -133,7 +133,7 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
 }
 
 async function connectAudioIterable(conn: ConnectionData) {
-  for await (const [chunk] of conn.audio.iter()) {
+  for await (const chunk of conn.audio.iter()) {
     sendAudioPacket(conn, chunk);
   }
 }
@@ -155,8 +155,8 @@ async function connectSocketToSource(
   bot: Bot,
   guildId: bigint,
   socket: Deno.DatagramConn,
-  source: EventSource<[UdpArgs]>,
-  localSource: EventSource<[Uint8Array]>
+  source: EventSource<UdpArgs>,
+  localSource: EventSource<Uint8Array>
 ) {
   for await (const [data, _address] of socket) {
     source.trigger({ bot, guildId, data });

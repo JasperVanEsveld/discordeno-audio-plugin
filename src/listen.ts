@@ -26,15 +26,11 @@ type ReceivedAudio = {
 };
 
 export function createOnAudio(
-  source: EventSource<
-    [
-      {
-        bot: Bot;
-        guildId: bigint;
-        data: Uint8Array;
-      }
-    ]
-  >
+  source: EventSource<{
+    bot: Bot;
+    guildId: bigint;
+    data: Uint8Array;
+  }>
 ) {
   return (
     guild: bigint | bigint[],
@@ -44,7 +40,6 @@ export function createOnAudio(
     const users = asArray(user);
     return source
       .iter()
-      .map(([udp]) => udp)
       .filter(({ data }) => {
         return data[1] === 120;
       })

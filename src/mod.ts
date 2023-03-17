@@ -33,7 +33,7 @@ export function enableAudioPlugin<T extends Bot>(
 }
 
 function createAudioHelpers(bot: Bot, loadSource: LoadSource) {
-  const udpSource = new EventSource<[UdpArgs]>();
+  const udpSource = new EventSource<UdpArgs>();
   createBotData(bot, udpSource, loadSource);
   const resetPlayer = (guildId: bigint) => {
     const conn = getConnectionData(bot.id, guildId);

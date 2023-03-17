@@ -1,28 +1,17 @@
 import { IterSource, fromCallback } from "./iterator/mod.ts";
-import { Arr } from "./types.ts";
 
-type Listener<T extends Arr> = (...arg: T) => void;
+type Listener<T> = (arg: T) => void;
 
-export class EventSource<T extends Arr> {
+export class BasicSource<T> {
   listeners: Listener<T>[] = [];
-  iter: IterSource<T>["iterator"];
-  disconnect: IterSource<T>["disconnect"];
 
-  constructor() {
-    const { iterator, disconnect } = fromCallback<T>((listener) =>
-      this.addListener(listener)
-    );
-    this.iter = iterator;
-    this.disconnect = disconnect;
-  }
-
-  trigger(...arg: T) {
+  trigger(value: T) {
     for (const listener of this.listeners) {
-      listener(...arg);
+      listener(value);
     }
   }
 
-  addListener(listener: Listener<T>) {
+  listen(listener: Listener<T>) {
     this.listeners.push(listener);
     return () => {
       this.removeListener(listener);
@@ -32,5 +21,32 @@ export class EventSource<T extends Arr> {
   removeListener(listener: Listener<T>) {
     const index = this.listeners.indexOf(listener);
     this.listeners.splice(index, 1);
+  }
+
+  listenOnce(listener: Listener<T>) {
+    const disconnect = this.listen((value) => {
+      disconnect();
+      listener(value);
+    });
+  }
+
+  next() {
+    return new Promise<T>((resolve) => {
+      this.listenOnce(resolve);
+    });
+  }
+}
+
+export class EventSource<T> extends BasicSource<T> {
+  iter: IterSource<T>["iterator"];
+  disconnect: IterSource<T>["disconnect"];
+
+  constructor() {
+    super();
+    const { iterator, disconnect } = fromCallback<T>((listener) =>
+      this.listen(listener)
+    );
+    this.iter = iterator;
+    this.disconnect = disconnect;
   }
 }

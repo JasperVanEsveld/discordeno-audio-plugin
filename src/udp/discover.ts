@@ -12,7 +12,7 @@ export async function discoverIP(
     port,
     transport: "udp",
   });
-  const { value } = await conn.udpStream().next();
+  const value = await conn.udpRaw.next();
   const decoder = new TextDecoder();
   const localIp = decoder.decode(value.slice(8, value.indexOf(0, 8)));
   const localPort = new DataView(value.buffer).getUint16(72, false);
