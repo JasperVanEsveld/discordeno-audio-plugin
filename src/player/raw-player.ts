@@ -70,8 +70,8 @@ export class RawPlayer implements Player<AsyncIterableIterator<Uint8Array>> {
   on<J extends RawEventTypes>(
     event: J,
     listener: PlayerListener<AsyncIterableIterator<Uint8Array>, J>
-  ): void {
-    this.#events.on(event, listener);
+  ) {
+    return this.#events.on(event, listener);
   }
 
   async #getFrame() {

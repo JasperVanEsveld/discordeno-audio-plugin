@@ -90,12 +90,13 @@ export class QueuePlayer
    * `loop`: New loop iteration was started
    * @param event Event to listen to
    * @param listener Triggered on event
+   * @returns Function that disconnects the listener
    */
   on<J extends AllEventTypes>(
     event: J,
     listener: PlayerListener<AudioSource, J>
-  ): void {
-    this.#events.on(event, listener);
+  ) {
+    return this.#events.on(event, listener);
   }
 
   /**

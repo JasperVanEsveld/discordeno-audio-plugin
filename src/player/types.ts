@@ -6,5 +6,8 @@ export type Player<T> = {
   pause(): void;
   stop(): void;
   clear(): void;
-  on<J extends RawEventTypes>(event: J, listener: PlayerListener<T, J>): void;
+  on<J extends RawEventTypes>(
+    event: J,
+    listener: PlayerListener<T, J>
+  ): () => void;
 };
