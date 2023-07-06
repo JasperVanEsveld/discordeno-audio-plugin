@@ -1,34 +1,19 @@
-export async function* bufferIter<T>(
+import { EventSource } from "./mod.ts";
+
+export function buffered<T>(iterator: AsyncIterableIterator<T>) {
+  const source = new EventSource<T>();
+  toCallback(iterator, (value) => {
+    source.trigger(value);
+    return value;
+  });
+  return source.iter();
+}
+
+async function toCallback<T>(
   iterator: AsyncIterableIterator<T>,
-  size = 60
+  callback: (value: T) => unknown
 ) {
-  const buffer: T[] = [];
-  for (let i = 0; i < size; i++) {
-    const result = await iterator.next();
-    if (result.done) {
-      break;
-    } else {
-      buffer.push(result.value);
-    }
-  }
-  let done = false;
-  while (!done || buffer.length > 0) {
-    if (buffer.length > 0) {
-      yield buffer.shift()!;
-      iterator.next().then((result) => {
-        if (result.done) {
-          done = true;
-        } else {
-          buffer.push(result.value);
-        }
-      });
-    } else {
-      const result = await iterator.next();
-      if (result.done) {
-        return;
-      } else {
-        yield result.value;
-      }
-    }
+  for await (const value of iterator) {
+    callback(value);
   }
 }

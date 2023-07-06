@@ -1,5 +1,5 @@
 import { YouTube, ytDownload } from "../../deps.ts";
-import { bufferIter, retry } from "../../utils/mod.ts";
+import { buffered, retry } from "../../utils/mod.ts";
 import { demux } from "../demux/mod.ts";
 import { createAudioSource, empty } from "./audio-source.ts";
 
@@ -27,7 +27,7 @@ export async function getYoutubeSource(query: string) {
           console.log(`Failed to play ${title}\n Returning empty stream`);
           return empty();
         }
-        return bufferIter(demux(stream));
+        return buffered(demux(stream));
       });
     }
   } catch (error) {
