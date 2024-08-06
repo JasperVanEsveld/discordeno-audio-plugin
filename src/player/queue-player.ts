@@ -105,10 +105,8 @@ export class QueuePlayer
    */
   async interruptQuery(query: string) {
     for await (const source of await this.#loadSource(query as string)) {
-      if (source !== undefined) {
-        this.#rawPlayer.interrupt(await source.data());
-        break;
-      }
+      this.#rawPlayer.interrupt(await source.data());
+      break;
     }
   }
 
@@ -116,10 +114,8 @@ export class QueuePlayer
     const sources = [];
     for (const query of queries) {
       for await (const source of await this.#loadSource(query as string)) {
-        if (source !== undefined) {
-          sources.push(source);
-          this.push(source);
-        }
+        sources.push(source);
+        this.push(source);
       }
     }
     return sources;
@@ -129,10 +125,8 @@ export class QueuePlayer
     const sources = [];
     for (const query of queries) {
       for await (const source of await this.#loadSource(query as string)) {
-        if (source !== undefined) {
-          sources.push(source);
-          this.unshift(source);
-        }
+        sources.push(source);
+        this.unshift(source);
       }
     }
     return sources;

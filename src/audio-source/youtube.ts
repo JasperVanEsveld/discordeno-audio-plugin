@@ -6,7 +6,10 @@ import { createAudioSource, empty } from "./audio-source.ts";
 export async function* getYoutubeSources(...queries: string[]) {
   for (const query of queries) {
     try {
-      yield await getYoutubeSource(query);
+      const source = await getYoutubeSource(query);
+      if (source !== undefined) {
+        yield source;
+      }
     } catch {
       // Skip songs with errors
     }
