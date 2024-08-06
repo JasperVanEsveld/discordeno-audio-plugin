@@ -104,15 +104,23 @@ export class QueuePlayer
    * @param query Loads a universal song (local file or youtube search)
    */
   async interruptQuery(query: string) {
-    const sources = await this.#loadSource(query as string);
-    this.#rawPlayer.interrupt(await sources[0].data());
+    for await (const source of await this.#loadSource(query as string)) {
+      if (source !== undefined) {
+        this.#rawPlayer.interrupt(await source.data());
+        break;
+      }
+    }
   }
 
   async pushQuery(...queries: string[]) {
     const sources = [];
     for (const query of queries) {
-      sources.push(...(await this.#loadSource(query as string)));
-      this.push(...sources);
+      for await (const source of await this.#loadSource(query as string)) {
+        if (source !== undefined) {
+          sources.push(source);
+          this.push(source);
+        }
+      }
     }
     return sources;
   }
@@ -120,8 +128,12 @@ export class QueuePlayer
   async unshiftQuery(...queries: string[]) {
     const sources = [];
     for (const query of queries) {
-      sources.push(...(await this.#loadSource(query as string)));
-      this.unshift(...sources);
+      for await (const source of await this.#loadSource(query as string)) {
+        if (source !== undefined) {
+          sources.push(source);
+          this.unshift(source);
+        }
+      }
     }
     return sources;
   }
