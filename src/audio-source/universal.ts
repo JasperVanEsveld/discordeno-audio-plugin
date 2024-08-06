@@ -1,13 +1,16 @@
-import { getLocalSources } from "./local.ts";
-import { getYoutubeSources } from "./youtube.ts";
+import { getLocalSource } from "./local.ts";
+import { getYoutubeSource } from "./youtube.ts";
 
 export type LoadSource = typeof loadLocalOrYoutube;
 
-export function loadLocalOrYoutube(query: string) {
+export async function* loadLocalOrYoutube(query: string) {
   const local = query.startsWith("./");
   if (local) {
-    return getLocalSources(query);
+    yield await getLocalSource(query);
   } else {
-    return getYoutubeSources(query);
+    const source = await getYoutubeSource(query);
+    if (source !== undefined) {
+      yield source;
+    }
   }
 }
