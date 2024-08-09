@@ -31,7 +31,7 @@ const youtube = await Innertube.create();
 
 export async function getYoutubeSource(query: string) {
   await getRateLimit();
-  const search = await youtube.search("Hello There!", {
+  const search = await youtube.search(query, {
     type: "video",
   });
   const video = search.videos.find((video) => video.type === "Video") as
