@@ -50,8 +50,12 @@ export async function getYoutubeSource(query: string) {
   const url = format.decipher(youtube.session.player);
 
   return createAudioSource(title, async () => {
-    const stream = (await fetch(url)).body!;
-    if (stream === undefined) {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.log(`Error occured \`${title}\`\n Returning empty stream`);
+    }
+    const stream = response.body;
+    if (stream === null) {
       console.log(`Failed to play \`${title}\`\n Returning empty stream`);
       return empty();
     }
