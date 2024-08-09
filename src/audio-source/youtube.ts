@@ -1,5 +1,5 @@
-import { YouTube, getFormats, getDataStream } from "../../deps.ts";
-import { buffered, retry } from "../../utils/mod.ts";
+import { Video, Innertube } from "../../deps.ts";
+import { buffered } from "../../utils/mod.ts";
 import { demux } from "../demux/mod.ts";
 import { createAudioSource, empty } from "./audio-source.ts";
 
@@ -27,25 +27,34 @@ async function getRateLimit() {
   );
 }
 
+const youtube = await Innertube.create();
+
 export async function getYoutubeSource(query: string) {
   await getRateLimit();
-  const results = await YouTube.search(query, { limit: 1, type: "video" });
-  if (results.length > 0) {
-    const { id, title } = results[0];
-    const formats = await getFormats(id!, {
-      mimeType: `audio/webm; codecs="opus"`,
-    });
-    if (formats.length === 0) {
-      throw `Could not find suitable format for \`${title}\``;
-    }
-
-    return createAudioSource(title!, async () => {
-      const stream = await retry(async () => await getDataStream(formats[0]));
-      if (stream === undefined) {
-        console.log(`Failed to play \`${title}\`\n Returning empty stream`);
-        return empty();
-      }
-      return buffered(demux(stream));
-    });
+  const search = await youtube.search("Hello There!", {
+    type: "video",
+  });
+  const video = search.videos.find((video) => video.type === "Video") as
+    | Video
+    | undefined;
+  if (video === undefined) {
+    throw `No videos found for ${query}`;
   }
+  const title = video.title.toString();
+  const info = await youtube.getBasicInfo(video.id);
+  const format = info.chooseFormat({
+    format: "opus",
+    type: "audio",
+    quality: "best",
+  });
+  const url = format.decipher(youtube.session.player);
+
+  return createAudioSource(title, async () => {
+    const stream = (await fetch(url)).body!;
+    if (stream === undefined) {
+      console.log(`Failed to play \`${title}\`\n Returning empty stream`);
+      return empty();
+    }
+    return buffered(demux(stream));
+  });
 }
