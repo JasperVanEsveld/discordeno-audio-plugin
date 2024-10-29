@@ -2,5 +2,11 @@ export * from "https://deno.land/x/discordeno@17.1.0/mod.ts";
 export * from "https://deno.land/x/discordeno@17.1.0/plugins/cache/mod.ts";
 export * as opus from "https://unpkg.com/@evan/wasm@0.0.95/target/opus/deno.js";
 export * from "https://unpkg.com/@evan/wasm@0.0.95/target/nacl/deno.js";
-export { Innertube } from "https://deno.land/x/youtubei@v10.3.0-deno/deno.ts";
-export type { Video } from "https://deno.land/x/youtubei@v10.3.0-deno/deno/src/parser/nodes.ts";
+export {
+    Innertube,
+    UniversalCache,
+} from "https://deno.land/x/youtubei@v11.0.1-deno/deno.ts";
+export type { Video } from "https://deno.land/x/youtubei@v11.0.1-deno/deno/src/parser/nodes.ts";
+export { BG } from "npm:bgutils-js@3.1.0";
+export type { BgConfig } from "npm:bgutils-js@3.1.0";
+export { JSDOM } from "npm:jsdom";

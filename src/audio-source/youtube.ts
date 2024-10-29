@@ -1,4 +1,5 @@
-import { Video, Innertube } from "../../deps.ts";
+import type { Video } from "../../deps.ts";
+import { createInnerTubeClient } from "../../utils/innertube.ts";
 import { buffered } from "../../utils/mod.ts";
 import { demux } from "../demux/mod.ts";
 import { createAudioSource, empty } from "./audio-source.ts";
@@ -27,7 +28,7 @@ async function getRateLimit() {
   );
 }
 
-const youtube = await Innertube.create();
+const youtube = await createInnerTubeClient();
 
 export async function getYoutubeSource(query: string) {
   await getRateLimit();
