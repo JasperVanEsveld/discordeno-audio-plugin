@@ -1,13 +1,12 @@
-import { Bot } from "../deps.ts";
 import { asArray } from "../utils/array.ts";
 import { EventSource } from "../utils/event-source.ts";
 import { IterExpanded } from "../utils/iterator/util/iter-utils.ts";
 import { getConnectionData } from "./connection-data.ts";
 import { decodeAudio } from "./encoding.ts";
-import { stripRTP } from "./mod.ts";
+import { stripRTP, UdpArgs } from "./mod.ts";
 
 type ReceivedAudio = {
-  bot: Bot;
+  bot: bigint;
   user: bigint;
   guildId: bigint;
   raw: Uint8Array;
@@ -26,15 +25,11 @@ type ReceivedAudio = {
 };
 
 export function createOnAudio(
-  source: EventSource<{
-    bot: Bot;
-    guildId: bigint;
-    data: Uint8Array;
-  }>
+  source: EventSource<UdpArgs>,
 ) {
   return (
     guild: bigint | bigint[],
-    user?: bigint | bigint[]
+    user?: bigint | bigint[],
   ): IterExpanded<ReceivedAudio> => {
     const guilds = asArray(guild);
     const users = asArray(user);
@@ -45,7 +40,7 @@ export function createOnAudio(
       })
       .filter(({ guildId }) => guilds.includes(guildId))
       .map((payload) => {
-        const conn = getConnectionData(payload.bot.id, payload.guildId);
+        const conn = getConnectionData(payload.botId, payload.guildId);
         try {
           const packet = stripRTP(conn, payload.data);
           const user = conn.ssrcToUser.get(packet.rtp.ssrc);
@@ -55,10 +50,10 @@ export function createOnAudio(
           const decoded = decodeAudio(
             packet.data,
             packet.rtp.ssrc,
-            packet.rtp.timestamp
+            packet.rtp.timestamp,
           );
           return {
-            bot: payload.bot,
+            bot: payload.botId,
             user,
             guildId: payload.guildId,
             raw: payload.data,

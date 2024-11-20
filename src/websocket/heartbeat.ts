@@ -1,6 +1,6 @@
-import { VoiceOpcodes } from "../../deps.ts";
 import { setDriftlessTimeout } from "npm:driftless";
 import { ConnectionData } from "../mod.ts";
+import { SendVoiceOpcodes } from "./opcodes.ts";
 
 function sendHeartBeat(conn: ConnectionData) {
   if (conn.context.lastHeart !== undefined) {
@@ -9,9 +9,9 @@ function sendHeartBeat(conn: ConnectionData) {
   conn.context.lastHeart = Date.now();
   conn.ws?.send(
     JSON.stringify({
-      op: VoiceOpcodes.Heartbeat,
+      op: SendVoiceOpcodes.Heartbeat,
       d: conn.context.lastHeart,
-    })
+    }),
   );
 }
 

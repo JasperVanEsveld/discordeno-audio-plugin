@@ -43,23 +43,27 @@ export async function getYoutubeSource(query: string) {
   }
   const title = video.title.toString();
   const info = await youtube.getBasicInfo(video.id);
-  const format = info.chooseFormat({
-    format: "opus",
-    type: "audio",
-    quality: "best",
-  });
-  const url = format.decipher(youtube.session.player);
+  try {
+    const format = info.chooseFormat({
+      format: "opus",
+      type: "audio",
+      quality: "best",
+    });
+    const url = format.decipher(youtube.session.player);
 
-  return createAudioSource(title, async () => {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.log(`Error occured \`${title}\`\n Returning empty stream`);
-    }
-    const stream = response.body;
-    if (stream === null) {
-      console.log(`Failed to play \`${title}\`\n Returning empty stream`);
-      return empty();
-    }
-    return buffered(demux(stream));
-  });
+    return createAudioSource(title, async () => {
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.log(`Error occured \`${title}\`\n Returning empty stream`);
+      }
+      const stream = response.body;
+      if (stream === null) {
+        console.log(`Failed to play \`${title}\`\n Returning empty stream`);
+        return empty();
+      }
+      return buffered(demux(stream));
+    });
+  } catch {
+    throw `Audio cannot be played for ${title}`;
+  }
 }

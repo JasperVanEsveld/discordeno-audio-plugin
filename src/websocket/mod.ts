@@ -1,12 +1,15 @@
-import { VoiceCloseEventCodes } from "../../deps.ts";
 import { ConnectionData } from "../connection-data.ts";
 import { socketHandlers } from "./handlers.ts";
-import { SendVoiceOpcodes } from "./opcodes.ts";
+import {
+  ReceiveVoiceOpcodes,
+  SendVoiceOpcodes,
+  VoiceCloseEventCodes,
+} from "./opcodes.ts";
 
 export function connectWebSocket(
   conn: ConnectionData,
   userId: bigint,
-  guildId: bigint
+  guildId: bigint,
 ) {
   conn.context.ready = false;
   const { token, sessionId, endpoint } = conn.connectInfo;
@@ -59,7 +62,7 @@ export function connectWebSocket(
 function handleOpen(
   conn: ConnectionData,
   identifyRequest: string,
-  resumeRequest: string
+  resumeRequest: string,
 ) {
   if (conn.ws?.readyState !== WebSocket.OPEN) {
     return;
@@ -70,14 +73,14 @@ function handleOpen(
 
 function handleMessage(conn: ConnectionData, ev: MessageEvent<any>) {
   const data = JSON.parse(ev.data);
-  socketHandlers[data.op]?.(conn, data.d);
+  socketHandlers[data.op as ReceiveVoiceOpcodes]?.(conn, data.d);
 }
 
 function handleClose(
   conn: ConnectionData,
   event: CloseEvent,
   userId: bigint,
-  guildId: bigint
+  guildId: bigint,
 ) {
   conn.stopHeart();
   conn.context.ready = false;

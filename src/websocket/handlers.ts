@@ -1,9 +1,8 @@
-import { VoiceOpcodes } from "../../deps.ts";
 import { ConnectionData, setUserSSRC } from "../connection-data.ts";
 import { discoverIP } from "../udp/discover.ts";
 import { setSpeaking } from "../udp/speaking.ts";
 import { sendHeart } from "./heartbeat.ts";
-import { ReceiveVoiceOpcodes } from "./opcodes.ts";
+import { ReceiveVoiceOpcodes, SendVoiceOpcodes } from "./opcodes.ts";
 
 export const socketHandlers: Record<
   ReceiveVoiceOpcodes,
@@ -30,7 +29,7 @@ function ready(conn: ConnectionData, d: any) {
     if (conn.ws?.readyState === WebSocket.OPEN) {
       conn.ws.send(
         JSON.stringify({
-          op: VoiceOpcodes.SelectProtocol,
+          op: SendVoiceOpcodes.SelectProtocol,
           d: {
             protocol: "udp",
             data: {
@@ -39,7 +38,7 @@ function ready(conn: ConnectionData, d: any) {
               mode: "xsalsa20_poly1305",
             },
           },
-        })
+        }),
       );
     }
   });

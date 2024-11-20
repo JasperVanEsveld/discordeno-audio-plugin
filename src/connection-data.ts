@@ -1,15 +1,14 @@
-import { Bot } from "../deps.ts";
 import { EventSource } from "../utils/mod.ts";
-import { AudioSource, LoadSource, UdpArgs } from "./mod.ts";
+import { LoadSource, UdpArgs } from "./mod.ts";
 import { QueuePlayer } from "./player/mod.ts";
 import { sendAudioPacket } from "./udp/packet.ts";
 
 export type BotData = {
-  bot: Bot;
+  botId: bigint;
   guildData: Map<bigint, ConnectionData>;
   udpSource: EventSource<UdpArgs>;
   bufferSize: number;
-  loadSource: (query: string) => AudioSource[] | Promise<AudioSource[]>;
+  loadSource: LoadSource;
 };
 
 export type ConnectionData = {
@@ -55,19 +54,19 @@ function randomNBit(n: number) {
 }
 
 export function createBotData(
-  bot: Bot,
+  botId: bigint,
   udpSource: EventSource<UdpArgs>,
   loadSource: LoadSource,
-  bufferSize = 10
+  bufferSize = 10,
 ) {
   const botData: BotData = {
-    bot,
+    botId,
     guildData: new Map(),
     udpSource,
     bufferSize,
     loadSource,
   };
-  connectionData.set(bot.id, botData);
+  connectionData.set(botId, botData);
   return botData;
 }
 
@@ -121,11 +120,11 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
     data.player = new QueuePlayer(data, botData.loadSource);
     botData.guildData.set(guildId, data);
     connectSocketToSource(
-      botData.bot,
+      botData.botId,
       guildId,
       udpSocket,
       botData.udpSource,
-      udpRaw
+      udpRaw,
     );
     connectAudioIterable(data);
   }
@@ -152,14 +151,14 @@ export function setUserSSRC(conn: ConnectionData, user: bigint, ssrc: number) {
 }
 
 async function connectSocketToSource(
-  bot: Bot,
+  botId: bigint,
   guildId: bigint,
   socket: Deno.DatagramConn,
   source: EventSource<UdpArgs>,
-  localSource: EventSource<Uint8Array>
+  localSource: EventSource<Uint8Array>,
 ) {
   for await (const [data, _address] of socket) {
-    source.trigger({ bot, guildId, data });
+    source.trigger({ botId, guildId, data });
     localSource.trigger(data);
   }
 }
