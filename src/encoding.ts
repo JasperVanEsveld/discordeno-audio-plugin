@@ -37,7 +37,7 @@ function getDecoder(ssrc: number) {
 export function decodeAudio(
   audio: Uint8Array,
   ssrc: number,
-  timestamp: number
+  timestamp: number,
 ) {
   const decoder = getDecoder(ssrc);
   return decoder(audio, timestamp);

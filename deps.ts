@@ -4,8 +4,8 @@ export * from "https://unpkg.com/@evan/wasm@0.0.95/target/nacl/deno.js";
 export {
     Innertube,
     UniversalCache,
-} from "https://deno.land/x/youtubei@v11.0.1-deno/deno.ts";
-export type { Video } from "https://deno.land/x/youtubei@v11.0.1-deno/deno/src/parser/nodes.ts";
+} from "https://deno.land/x/youtubei@v12.2.0-deno/deno.ts";
+export type { Video } from "https://deno.land/x/youtubei@v12.2.0-deno/deno/src/parser/nodes.ts";
 export { BG } from "npm:bgutils-js@3.1.0";
 export type { BgConfig } from "npm:bgutils-js@3.1.0";
 export { JSDOM } from "npm:jsdom";

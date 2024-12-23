@@ -1,14 +1,12 @@
 import { Queue } from "../../utils/mod.ts";
 import { AudioSource, LoadSource } from "../audio-source/mod.ts";
 import { ConnectionData } from "../connection-data.ts";
-import { PlayerEventSource, AllEventTypes, PlayerListener } from "./events.ts";
+import { AllEventTypes, PlayerEventSource, PlayerListener } from "./events.ts";
 import { RawPlayer } from "./raw-player.ts";
 import { Player } from "./types.ts";
 
-export class QueuePlayer
-  extends Queue<AudioSource>
-  implements Player<AudioSource>
-{
+export class QueuePlayer extends Queue<AudioSource>
+  implements Player<AudioSource> {
   playing = true;
   looping = false;
   playingSince?: number;
@@ -47,7 +45,7 @@ export class QueuePlayer
     this.#rawPlayer.setAudio(await song.data());
   }
 
-  clear() {
+  override clear() {
     return super.clear();
   }
 
@@ -94,7 +92,7 @@ export class QueuePlayer
    */
   on<J extends AllEventTypes>(
     event: J,
-    listener: PlayerListener<AudioSource, J>
+    listener: PlayerListener<AudioSource, J>,
   ) {
     return this.#events.on(event, listener);
   }
