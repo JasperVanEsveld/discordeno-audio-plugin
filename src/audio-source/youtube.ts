@@ -32,17 +32,8 @@ const youtube = await createInnerTubeClient();
 
 export async function getYoutubeSource(query: string) {
   await getRateLimit();
-  const search = await youtube.search(query, {
-    type: "video",
-  });
-  const video = search.videos.find((video) => video.type === "Video") as
-    | Video
-    | undefined;
-  if (video === undefined) {
-    throw `No videos found for ${query}`;
-  }
-  const title = video.title.toString();
-  const info = await youtube.getBasicInfo(video.id);
+  const info = await youtube.getInfo(query);
+  const title = info.basic_info.title || "Unknown";
   try {
     const format = info.chooseFormat({
       format: "opus",
