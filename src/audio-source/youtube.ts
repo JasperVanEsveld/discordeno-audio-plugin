@@ -32,6 +32,13 @@ const youtube = await createInnerTubeClient();
 
 export async function getYoutubeSource(query: string) {
   await getRateLimit();
+  if (query.includes("?v=")) {
+    const header = "?v=";
+    const index = query.indexOf(header);
+    query = query.slice(index + header.length);
+  } else if (query.startsWith("https://youtu.be/")) {
+    query = query.replace("https://youtu.be/", "");
+  }
   const info = await youtube.getInfo(query);
   const title = info.basic_info.title || "Unknown";
   try {
