@@ -1,4 +1,3 @@
-import type { Video } from "../../deps.ts";
 import { createInnerTubeClient } from "../../utils/innertube.ts";
 import { buffered } from "../../utils/mod.ts";
 import { demux } from "../demux/mod.ts";
@@ -46,6 +45,7 @@ export async function getYoutubeSource(query: string) {
       format: "opus",
       type: "audio",
       quality: "best",
+      client: "WEB_EMBEDDED",
     });
     const url = format.decipher(youtube.session.player);
 
