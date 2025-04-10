@@ -1,18 +1,23 @@
-import {
-    BG,
-    type BgConfig,
-    Innertube,
-    JSDOM,
-    UniversalCache,
-} from "../deps.ts";
+import { ClientType } from "https://deno.land/x/youtubei@v13.3.0-deno/deno.ts";
+import { BG, JSDOM, YT } from "../deps.ts";
 
 export async function createInnerTubeClient() {
-    const innertube = await Innertube.create({ retrieve_player: false });
+    const visitorData = YT.ProtoUtils.encodeVisitorData(
+        YT.Utils.generateRandomString(11),
+        Math.floor(Date.now() / 1000),
+    );
+    const po_token = await getPo(visitorData);
+    return await YT.Innertube.create({
+        po_token: po_token,
+        visitor_data: visitorData,
+        cache: new YT.UniversalCache(false),
+        generate_session_locally: false,
+        client_type: ClientType.WEB_EMBEDDED,
+    });
+}
 
+async function getPo(identifier: string): Promise<string | undefined> {
     const requestKey = "O43z0dpjhgX20SCx4KAo";
-    const visitorData = innertube.session.context.client.visitorData;
-
-    if (!visitorData) throw new Error("Could not get visitor data");
 
     const dom = new JSDOM();
 
@@ -21,17 +26,19 @@ export async function createInnerTubeClient() {
         document: dom.window.document,
     });
 
-    const bgConfig: BgConfig = {
+    const bgConfig = {
         fetch: (input: string | URL | globalThis.Request, init?: RequestInit) =>
             fetch(input, init),
         globalObj: globalThis,
-        identifier: visitorData,
         requestKey,
+        identifier,
     };
 
     const bgChallenge = await BG.Challenge.create(bgConfig);
 
-    if (!bgChallenge) throw new Error("Could not get challenge");
+    if (!bgChallenge) {
+        throw new Error("Could not get challenge");
+    }
 
     const interpreterJavascript = bgChallenge.interpreterJavascript
         .privateDoNotAccessOrElseSafeScriptWrappedValue;
@@ -46,10 +53,5 @@ export async function createInnerTubeClient() {
         bgConfig,
     });
 
-    return await Innertube.create({
-        po_token: poTokenResult.poToken,
-        visitor_data: visitorData,
-        cache: new UniversalCache(false),
-        generate_session_locally: true,
-    });
+    return poTokenResult.poToken;
 }
