@@ -1,6 +1,8 @@
 import { EventSource } from "../utils/mod.ts";
+import { wait } from "../utils/wait.ts";
 import { LoadSource, UdpArgs } from "./mod.ts";
 import { QueuePlayer } from "./player/mod.ts";
+import { FRAME_DURATION } from "./sample-consts.ts";
 import { sendAudioPacket } from "./udp/packet.ts";
 
 export type BotData = {
@@ -13,7 +15,7 @@ export type BotData = {
 
 export type ConnectionData = {
   player: QueuePlayer;
-  audio: EventSource<Uint8Array>;
+  audio: ReturnType<typeof createAudioStreamer>;
   guildId: bigint;
   udpSocket: Deno.DatagramConn;
   udpRaw: EventSource<Uint8Array>;
@@ -112,7 +114,7 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
         reconnect: 0,
       },
       connectInfo: {},
-      audio: new EventSource<Uint8Array>(),
+      audio: createAudioStreamer(),
       ssrcToUser: new Map<number, bigint>(),
       usersToSsrc: new Map<bigint, number>(),
       stopHeart: () => {},
@@ -131,9 +133,33 @@ export function getConnectionData(botId: bigint, guildId: bigint) {
   return data;
 }
 
+function createAudioStreamer() {
+  const eventsource = new EventSource<Uint8Array>();
+  let n_frames = 0;
+  let start = 0;
+  return {
+    iter: eventsource.iter,
+    reset: function () {
+      start = Date.now();
+      n_frames = 0;
+    },
+    trigger: async function (chunk: Uint8Array) {
+      const expected_timestamp = start + n_frames * FRAME_DURATION;
+      const timestamp = Date.now();
+      const time_to_wait = expected_timestamp - timestamp;
+      if (Math.abs(time_to_wait / FRAME_DURATION) > 2) {
+        this.reset();
+      }
+      await wait(Math.max(0, time_to_wait));
+      eventsource.trigger(chunk);
+      n_frames += 1;
+    },
+  };
+}
+
 async function connectAudioIterable(conn: ConnectionData) {
   for await (const chunk of conn.audio.iter()) {
-    sendAudioPacket(conn, chunk);
+    await sendAudioPacket(conn, chunk);
   }
 }
 

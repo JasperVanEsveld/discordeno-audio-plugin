@@ -1,5 +1,5 @@
-import { createInnerTubeClient } from "../../utils/innertube.ts";
 import { buffered } from "../../utils/mod.ts";
+import { getAudioStream, getVideoInfo } from "../../utils/youtube/mod.ts";
 import { demux } from "../demux/mod.ts";
 import { createAudioSource, empty } from "./audio-source.ts";
 
@@ -27,34 +27,25 @@ async function getRateLimit() {
   );
 }
 
-const youtube = await createInnerTubeClient();
-
 export async function getYoutubeSource(query: string) {
   await getRateLimit();
-  if (query.includes("?v=")) {
-    const header = "?v=";
-    const index = query.indexOf(header);
-    query = query.slice(index + header.length);
-  } else if (query.startsWith("https://youtu.be/")) {
-    query = query.replace("https://youtu.be/", "");
+  const info = await getVideoInfo(query);
+  if (info === undefined) {
+    throw `Could not find ${query}`;
   }
-  const info = await youtube.getInfo(query);
-  const title = info.basic_info.title || "Unknown";
+
   try {
-    return createAudioSource(title, async () => {
-      const stream = await youtube.download(query, {
-        format: "opus",
-        type: "audio",
-        quality: "best",
-        client: "WEB_EMBEDDED",
-      });
+    return createAudioSource(info.title, () => {
+      const stream = getAudioStream(info.id);
       if (stream === null) {
-        console.log(`Failed to play \`${title}\`\n Returning empty stream`);
+        console.log(
+          `Failed to play \`${info.title}\`\n Returning empty stream`,
+        );
         return empty();
       }
       return buffered(demux(stream));
     });
   } catch {
-    throw `Audio cannot be played for ${title}`;
+    throw `Audio cannot be played for ${query}`;
   }
 }

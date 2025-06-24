@@ -40,8 +40,8 @@ export class QueuePlayer extends Queue<AudioSource>
     } else {
       song = await super.next();
       this.#events.trigger("next", song);
+      this.playingSince = Date.now();
     }
-    this.playingSince = Date.now();
     this.#rawPlayer.setAudio(await song.data());
   }
 
@@ -61,8 +61,8 @@ export class QueuePlayer extends Queue<AudioSource>
   }
 
   stop() {
+    this.clear();
     this.skip();
-    this.pause();
   }
 
   skip() {

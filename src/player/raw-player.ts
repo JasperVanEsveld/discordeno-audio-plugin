@@ -1,8 +1,6 @@
 import { ConnectionData } from "../connection-data.ts";
-import { FRAME_DURATION } from "../sample-consts.ts";
 import { Player } from "./types.ts";
-import { setDriftlessInterval, clearDriftless } from "npm:driftless";
-import { PlayerEventSource, RawEventTypes, PlayerListener } from "./events.ts";
+import { PlayerEventSource, PlayerListener, RawEventTypes } from "./events.ts";
 
 export class RawPlayer implements Player<AsyncIterableIterator<Uint8Array>> {
   #audio?: AsyncIterableIterator<Uint8Array>;
@@ -23,18 +21,16 @@ export class RawPlayer implements Player<AsyncIterableIterator<Uint8Array>> {
       return;
     }
     this.playing = true;
-
-    const inter = setDriftlessInterval(async () => {
-      if (this.playing === false) {
-        clearDriftless(inter);
-        return;
+    const play_routine = async () => {
+      while (this.playing !== false) {
+        const frame = await this.#getFrame();
+        if (frame === undefined) {
+          return;
+        }
+        await this.#conn.audio.trigger(frame);
       }
-      const frame = await this.#getFrame();
-      if (frame === undefined) {
-        return;
-      }
-      this.#conn.audio.trigger(frame);
-    }, FRAME_DURATION);
+    };
+    play_routine();
   }
 
   pause() {
@@ -69,7 +65,7 @@ export class RawPlayer implements Player<AsyncIterableIterator<Uint8Array>> {
 
   on<J extends RawEventTypes>(
     event: J,
-    listener: PlayerListener<AsyncIterableIterator<Uint8Array>, J>
+    listener: PlayerListener<AsyncIterableIterator<Uint8Array>, J>,
   ) {
     return this.#events.on(event, listener);
   }
