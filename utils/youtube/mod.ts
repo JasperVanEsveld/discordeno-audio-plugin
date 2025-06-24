@@ -2,8 +2,6 @@ import { type } from "node:os";
 import { exists } from "jsr:@std/fs/exists";
 import { youtubeSearch } from "../../deps.ts";
 
-const dirname = import.meta.dirname!;
-
 const os = type() as keyof typeof binaries;
 const binaries = {
     "Windows_NT":
@@ -14,7 +12,7 @@ const binaries = {
         "https://github.com/yt-dlp/yt-dlp/releases/download/2025.06.09/yt-dlp_macos",
 };
 const url = binaries[os];
-const filename = `${dirname}/${url.split("/").pop()}`;
+const filename = `./${url.split("/").pop()}`;
 
 if (!await exists(filename)) {
     const binaryResponse = await fetch(url);
