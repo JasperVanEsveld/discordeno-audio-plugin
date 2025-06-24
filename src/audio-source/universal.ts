@@ -3,8 +3,8 @@ import { getYoutubeSource } from "./youtube.ts";
 
 export type LoadSource = typeof loadSource;
 
-export async function loadSource(query: string) {
-  return await loadLocalOrYoutube(query);
+export function loadSource(query: string) {
+  return loadLocalOrYoutube(query);
 }
 
 export async function* loadLocalOrYoutube(query: string) {
