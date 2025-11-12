@@ -4,17 +4,13 @@ import { youtubeSearch } from "../../deps.ts";
 
 const os = type() as keyof typeof binaries;
 const binaries = {
-    "Windows_NT":
-        "https://github.com/yt-dlp/yt-dlp/releases/download/2025.06.09/yt-dlp.exe",
-    "Linux":
-        "https://github.com/yt-dlp/yt-dlp/releases/download/2025.06.09/yt-dlp_linux",
-    "Darwin":
-        "https://github.com/yt-dlp/yt-dlp/releases/download/2025.06.09/yt-dlp_macos",
+    Windows_NT: "https://github.com/yt-dlp/yt-dlp/releases/download/2025.11.12/yt-dlp.exe",
+    Linux: "https://github.com/yt-dlp/yt-dlp/releases/download/2025.11.12/yt-dlp_linux",
 };
 const url = binaries[os];
 const filename = `./${url.split("/").pop()}`;
 
-if (!await exists(filename)) {
+if (!(await exists(filename))) {
     const binaryResponse = await fetch(url);
 
     if (binaryResponse.body) {
@@ -38,16 +34,34 @@ export async function getVideoInfo(search: string) {
     };
 }
 
-export function getAudioStream(id: string) {
+export async function getAudioStream(id: string) {
+    const ytdlp_cmd = new Deno.Command(filename, {
+        args: ["-x", "--audio-format", "aac", "-o", "-", id],
+        stdout: "piped",
+        stderr: "null",
+    });
+
+    const ytdlp_child = ytdlp_cmd.spawn();
+    const aac_audio = await ytdlp_child.output();
+
+    const ffmpeg_cmd = new Deno.Command("ffmpeg", {
+        args: ["-f", "aac", "-i", "pipe:", "-acodec", "pcm_s16le", "-f", "s16le", "-"],
+        stdin: "piped",
+        stdout: "piped",
+        stderr: "null",
+    });
+
+    const ffmpeg_child = ffmpeg_cmd.spawn();
+    const writer = ffmpeg_child.stdin.getWriter();
+    writer.write(aac_audio.stdout);
+    writer.close();
+
+    return ffmpeg_child.stdout;
+}
+
+export function getVideoStream(id: string) {
     const cmd = new Deno.Command(filename, {
-        args: [
-            "-x",
-            "--audio-format",
-            "opus",
-            "-o",
-            "-",
-            id,
-        ],
+        args: ["-o", "-", id],
         stdout: "piped",
         stderr: "null",
     });
