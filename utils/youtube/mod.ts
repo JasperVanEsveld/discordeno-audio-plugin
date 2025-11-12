@@ -45,26 +45,26 @@ export async function getVideoInfo(search: string) {
 
 export async function getAudioStream(id: string) {
     const ytdlp_cmd = new Deno.Command(ytdlp, {
-        args: ["-x", "--audio-format", "aac", "-o", "-", id],
-        stdout: "piped",
+        args: ["-x", "--audio-format", "m4a", "-o", "./temp.m4a", id],
+        stdin: "null",
+        stdout: "null",
         stderr: "null",
     });
 
     const ytdlp_child = ytdlp_cmd.spawn();
-    const aac_audio = await ytdlp_child.output();
+    await ytdlp_child.output();
 
     const ffmpeg_cmd = new Deno.Command("ffmpeg", {
-        args: ["-f", "aac", "-i", "pipe:", "-acodec", "pcm_s16le", "-f", "s16le", "-"],
-        stdin: "piped",
+        args: ["-i", "./temp.m4a", "-acodec", "pcm_s16le", "-f", "s16le", "-"],
+        stdin: "null",
         stdout: "piped",
         stderr: "null",
     });
 
     const ffmpeg_child = ffmpeg_cmd.spawn();
-    const writer = ffmpeg_child.stdin.getWriter();
-    writer.write(aac_audio.stdout);
-    writer.close();
-
+    ffmpeg_child.status.then(async () => {
+        await Deno.remove("./temp.m4a");
+    });
     return ffmpeg_child.stdout;
 }
 
