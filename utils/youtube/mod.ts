@@ -43,9 +43,15 @@ export async function getVideoInfo(search: string) {
     };
 }
 
+const temp_dir = "./_tmp_audio";
+if (!(await exists(temp_dir, { isDirectory: true }))) {
+    await Deno.mkdir(temp_dir);
+}
+
 export async function getAudioStream(id: string) {
+    const temp_file = `${temp_dir}/${id}.m4a`;
     const ytdlp_cmd = new Deno.Command(ytdlp, {
-        args: ["-x", "--audio-format", "m4a", "-o", "./temp.m4a", id],
+        args: ["-x", "--audio-format", "m4a", "-o", temp_file, id],
         stdin: "null",
         stdout: "null",
         stderr: "null",
@@ -55,7 +61,7 @@ export async function getAudioStream(id: string) {
     await ytdlp_child.output();
 
     const ffmpeg_cmd = new Deno.Command("ffmpeg", {
-        args: ["-i", "./temp.m4a", "-acodec", "pcm_s16le", "-f", "s16le", "-"],
+        args: ["-i", temp_file, "-acodec", "pcm_s16le", "-f", "s16le", "-"],
         stdin: "null",
         stdout: "piped",
         stderr: "null",
@@ -63,7 +69,7 @@ export async function getAudioStream(id: string) {
 
     const ffmpeg_child = ffmpeg_cmd.spawn();
     ffmpeg_child.status.then(async () => {
-        await Deno.remove("./temp.m4a");
+        await Deno.remove(temp_file);
     });
     return ffmpeg_child.stdout;
 }
