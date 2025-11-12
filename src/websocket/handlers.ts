@@ -51,7 +51,6 @@ function resumed(conn: ConnectionData) {
 }
 
 function sessionDescription(conn: ConnectionData, d: any) {
-    console.log(d);
     const secret = d.secret_key;
     const mode = d.mode;
     conn.secret = new Uint8Array(secret);
