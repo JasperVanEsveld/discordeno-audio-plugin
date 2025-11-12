@@ -2,26 +2,41 @@ import { type } from "node:os";
 import { exists } from "jsr:@std/fs/exists";
 import { youtubeSearch } from "../../deps.ts";
 
-const os = type() as keyof typeof binaries;
-const binaries = {
+const os = type() as keyof typeof ytdlp_binaries;
+const ytdlp_binaries = {
     Windows_NT: "https://github.com/yt-dlp/yt-dlp/releases/download/2025.11.12/yt-dlp.exe",
     Linux: "https://github.com/yt-dlp/yt-dlp/releases/download/2025.11.12/yt-dlp_linux",
 };
-const url = binaries[os];
-const filename = `./${url.split("/").pop()}`;
+const ffmpeg_binaries = {
+    Windows_NT:
+        "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-win32-x64",
+    Linux: "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-linux-x64",
+};
 
-if (!(await exists(filename))) {
-    const binaryResponse = await fetch(url);
-
-    if (binaryResponse.body) {
-        const file = await Deno.open(filename, {
-            write: true,
-            create: true,
-        });
-
-        await binaryResponse.body.pipeTo(file.writable);
+async function download_binary(binaries: any) {
+    const url = binaries[os];
+    let filename = `./${url.split("/").pop()}`;
+    if (!filename.endsWith(".exe")) {
+        filename += ".exe";
     }
+
+    if (!(await exists(filename))) {
+        const binaryResponse = await fetch(url);
+
+        if (binaryResponse.body) {
+            const file = await Deno.open(filename, {
+                write: true,
+                create: true,
+            });
+
+            await binaryResponse.body.pipeTo(file.writable);
+        }
+    }
+    return filename;
 }
+const ytdlp = await download_binary(ytdlp_binaries);
+const ffmpeg = await download_binary(ffmpeg_binaries);
+
 export async function getVideoInfo(search: string) {
     const video_info = (await youtubeSearch(search)).videos[0];
     if (video_info === undefined) {
@@ -35,7 +50,7 @@ export async function getVideoInfo(search: string) {
 }
 
 export async function getAudioStream(id: string) {
-    const ytdlp_cmd = new Deno.Command(filename, {
+    const ytdlp_cmd = new Deno.Command(ytdlp, {
         args: ["-x", "--audio-format", "aac", "-o", "-", id],
         stdout: "piped",
         stderr: "null",
@@ -44,7 +59,7 @@ export async function getAudioStream(id: string) {
     const ytdlp_child = ytdlp_cmd.spawn();
     const aac_audio = await ytdlp_child.output();
 
-    const ffmpeg_cmd = new Deno.Command("ffmpeg", {
+    const ffmpeg_cmd = new Deno.Command(ffmpeg, {
         args: ["-f", "aac", "-i", "pipe:", "-acodec", "pcm_s16le", "-f", "s16le", "-"],
         stdin: "piped",
         stdout: "piped",
@@ -60,7 +75,7 @@ export async function getAudioStream(id: string) {
 }
 
 export function getVideoStream(id: string) {
-    const cmd = new Deno.Command(filename, {
+    const cmd = new Deno.Command(ytdlp, {
         args: ["-o", "-", id],
         stdout: "piped",
         stderr: "null",
