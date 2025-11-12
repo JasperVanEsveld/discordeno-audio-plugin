@@ -7,11 +7,6 @@ const ytdlp_binaries = {
     Windows_NT: "https://github.com/yt-dlp/yt-dlp/releases/download/2025.11.12/yt-dlp.exe",
     Linux: "https://github.com/yt-dlp/yt-dlp/releases/download/2025.11.12/yt-dlp_linux",
 };
-const ffmpeg_binaries = {
-    Windows_NT:
-        "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-win32-x64",
-    Linux: "https://github.com/eugeneware/ffmpeg-static/releases/download/b6.0/ffmpeg-linux-x64",
-};
 
 async function download_binary(binaries: any) {
     const url = binaries[os];
@@ -35,7 +30,6 @@ async function download_binary(binaries: any) {
     return filename;
 }
 const ytdlp = await download_binary(ytdlp_binaries);
-const ffmpeg = await download_binary(ffmpeg_binaries);
 
 export async function getVideoInfo(search: string) {
     const video_info = (await youtubeSearch(search)).videos[0];
@@ -59,7 +53,7 @@ export async function getAudioStream(id: string) {
     const ytdlp_child = ytdlp_cmd.spawn();
     const aac_audio = await ytdlp_child.output();
 
-    const ffmpeg_cmd = new Deno.Command(ffmpeg, {
+    const ffmpeg_cmd = new Deno.Command("ffmpeg", {
         args: ["-f", "aac", "-i", "pipe:", "-acodec", "pcm_s16le", "-f", "s16le", "-"],
         stdin: "piped",
         stdout: "piped",
